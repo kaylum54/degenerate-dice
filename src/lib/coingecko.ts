@@ -75,31 +75,55 @@ const TOKEN_COLORS = [
 const DEXSCREENER_API = "https://api.dexscreener.com";
 const COINGECKO_API = "https://api.coingecko.com/api/v3";
 
-// Fetch top 50 Solana tokens created in the last 14 days from DexScreener
+// Fetch top 30 Solana tokens by 24h volume from DexScreener
 export async function fetchNewSolanaTokens(): Promise<SolanaToken[]> {
   try {
-    // Use DexScreener's token boosted API for Solana to find trending new tokens
-    // Then filter by creation date
-    const [boostResponse, searchResponse] = await Promise.all([
-      fetch(`${DEXSCREENER_API}/token-boosts/top/v1`, {
-        headers: { accept: "application/json" },
-        next: { revalidate: 300 },
-      }),
-      // Also search for recent memecoins
-      fetch(`${DEXSCREENER_API}/latest/dex/search?q=memecoin`, {
-        headers: { accept: "application/json" },
-        next: { revalidate: 300 },
-      }),
+    // Use multiple search queries to get a good variety of high-volume Solana tokens
+    const searchQueries = ["SOL", "meme", "ai", "defi"];
+    const allPairs: DexScreenerPair[] = [];
+
+    // Fetch pairs from multiple search queries in parallel
+    const searchPromises = searchQueries.map(async (query) => {
+      try {
+        const response = await fetch(
+          `${DEXSCREENER_API}/latest/dex/search?q=${query}`,
+          {
+            headers: { accept: "application/json" },
+            next: { revalidate: 300 },
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          return data.pairs || [];
+        }
+      } catch (e) {
+        console.error(`Error fetching search results for ${query}:`, e);
+      }
+      return [];
+    });
+
+    // Also fetch boosted tokens
+    const boostPromise = fetch(`${DEXSCREENER_API}/token-boosts/top/v1`, {
+      headers: { accept: "application/json" },
+      next: { revalidate: 300 },
+    });
+
+    const [searchResults, boostResponse] = await Promise.all([
+      Promise.all(searchPromises),
+      boostPromise,
     ]);
 
-    const allPairs: DexScreenerPair[] = [];
+    // Combine all search results
+    for (const pairs of searchResults) {
+      allPairs.push(...pairs);
+    }
 
     // Process boosted tokens
     if (boostResponse.ok) {
       const boostData = await boostResponse.json();
-      // Boosted tokens come in different format - fetch their pairs
       const boostTokens = Array.isArray(boostData) ? boostData : [];
-      for (const token of boostTokens.slice(0, 20)) {
+      // Fetch pair data for top boosted Solana tokens
+      for (const token of boostTokens.slice(0, 15)) {
         if (token.chainId === "solana" && token.tokenAddress) {
           try {
             const pairRes = await fetch(
@@ -117,36 +141,25 @@ export async function fetchNewSolanaTokens(): Promise<SolanaToken[]> {
       }
     }
 
-    // Process search results
-    if (searchResponse.ok) {
-      const searchData = await searchResponse.json();
-      const searchPairs: DexScreenerPair[] = searchData.pairs || [];
-      allPairs.push(...searchPairs);
-    }
-
-    // Filter to Solana pairs created in the last 14 days
-    const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
-
+    // Filter to Solana pairs with good liquidity and volume
     const solanaPairs = allPairs.filter((pair) => {
       const isSOL = pair.chainId === "solana";
-      const isNew = pair.pairCreatedAt && pair.pairCreatedAt > fourteenDaysAgo;
-      const hasLiquidity = (pair.liquidity?.usd || 0) > 5000; // Min $5k liquidity
-      const hasVolume = (pair.volume?.h24 || 0) > 1000; // Min $1k 24h volume
-      const isNotStable = !["USDC", "USDT", "SOL", "WSOL", "WETH", "USDE"].includes(
+      const hasLiquidity = (pair.liquidity?.usd || 0) > 10000; // Min $10k liquidity
+      const hasVolume = (pair.volume?.h24 || 0) > 50000; // Min $50k 24h volume
+      const isNotStable = !["USDC", "USDT", "SOL", "WSOL", "WETH", "USDE", "DAI"].includes(
         pair.baseToken?.symbol?.toUpperCase() || ""
       );
 
-      return isSOL && isNew && hasLiquidity && hasVolume && isNotStable;
+      return isSOL && hasLiquidity && hasVolume && isNotStable;
     });
 
-    console.log(`DexScreener: Found ${allPairs.length} total pairs, ${solanaPairs.length} new Solana pairs`);
+    console.log(`DexScreener: Found ${allPairs.length} total pairs, ${solanaPairs.length} valid Solana pairs`);
 
-    // Sort by volume and take top 50
+    // Sort by 24h volume (highest first) and take top pairs
     const sortedPairs = solanaPairs
-      .sort((a, b) => (b.volume?.h24 || 0) - (a.volume?.h24 || 0))
-      .slice(0, 50);
+      .sort((a, b) => (b.volume?.h24 || 0) - (a.volume?.h24 || 0));
 
-    // Deduplicate by token address (some tokens have multiple pairs)
+    // Deduplicate by token address and take top 30
     const seenAddresses = new Set<string>();
     const uniqueTokens: SolanaToken[] = [];
 
@@ -166,18 +179,21 @@ export async function fetchNewSolanaTokens(): Promise<SolanaToken[]> {
         total_volume: pair.volume?.h24 || 0,
         address: pair.baseToken.address,
       });
+
+      // Stop at 30 tokens
+      if (uniqueTokens.length >= 30) break;
     }
 
-    console.log(`Fetched ${uniqueTokens.length} new Solana tokens from DexScreener (created in last 14 days)`);
+    console.log(`Fetched ${uniqueTokens.length} top Solana tokens by 24h volume from DexScreener`);
 
     if (uniqueTokens.length < 6) {
-      console.log("Not enough new tokens, falling back to top Solana tokens");
+      console.log("Not enough tokens from DexScreener, falling back to CoinGecko");
       return await fetchTopSolanaTokensFallback();
     }
 
     return uniqueTokens;
   } catch (error) {
-    console.error("Error fetching new Solana tokens from DexScreener:", error);
+    console.error("Error fetching Solana tokens from DexScreener:", error);
     return await fetchTopSolanaTokensFallback();
   }
 }

@@ -194,23 +194,33 @@ export async function GET() {
       }
     }
 
-    // If no live round exists, start one
+    // If no live round exists but there's a next round, promote it to live
+    if (!currentLiveRound && currentNextRound) {
+      const nextTokenIds = currentNextRound.tokens.map((t) => t.id);
+      const nextPriceMap = await fetchTokenPricesByIds(nextTokenIds);
+
+      const startPrices: Record<string, number> = {};
+      currentNextRound.tokens.forEach((token) => {
+        startPrices[token.symbol] = nextPriceMap[token.id] || 0;
+      });
+
+      await storage.promoteNextRoundToLive(startPrices);
+      actions.push(`Promoted preview round to live: ${currentNextRound.tokens.map(t => t.symbol).join(", ")}`);
+    }
+
+    // If no live round AND no next round exists, start a fresh one
     if (!currentLiveRound && !currentNextRound) {
-      const noLive = await storage.getLiveRound();
+      const tokens = await getTokensForNewRound(6);
+      const tokenIds = tokens.map((t) => t.id);
+      const priceMap = await fetchTokenPricesByIds(tokenIds);
 
-      if (!noLive) {
-        const tokens = await getTokensForNewRound(6);
-        const tokenIds = tokens.map((t) => t.id);
-        const priceMap = await fetchTokenPricesByIds(tokenIds);
+      const startPrices: Record<string, number> = {};
+      tokens.forEach((token) => {
+        startPrices[token.symbol] = priceMap[token.id] || 0;
+      });
 
-        const startPrices: Record<string, number> = {};
-        tokens.forEach((token) => {
-          startPrices[token.symbol] = priceMap[token.id] || 0;
-        });
-
-        await storage.startNewLiveRound(tokens, startPrices);
-        actions.push(`Started initial round with tokens: ${tokens.map(t => t.symbol).join(", ")}`);
-      }
+      await storage.startNewLiveRound(tokens, startPrices);
+      actions.push(`Started initial round with tokens: ${tokens.map(t => t.symbol).join(", ")}`);
     }
 
     return NextResponse.json({
