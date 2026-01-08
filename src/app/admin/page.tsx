@@ -396,8 +396,8 @@ export default function AdminPage() {
                           <td className="py-2 font-mono text-white/60">
                             {entry.round.id.slice(-12)}
                           </td>
-                          <td className="py-2 text-neon-cyan font-bold">
-                            {entry.round.winner}
+                          <td className={`py-2 font-bold ${entry.round.winner === "REFUNDED" ? "text-neon-orange" : "text-neon-cyan"}`}>
+                            {entry.round.winner === "REFUNDED" ? "REFUNDED" : entry.round.winner}
                           </td>
                           <td className="py-2 font-mono">
                             {formatSOL(entry.round.totalPool)} SOL
@@ -459,10 +459,13 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {/* Payouts */}
+                      {/* Payouts / Refunds */}
                       <div>
                         <h4 className="text-white/60 text-sm mb-2 font-bold">
-                          Payouts ({selectedHistoryRound.payouts.length} winners)
+                          {selectedHistoryRound.round.winner === "REFUNDED"
+                            ? `Refunds (${selectedHistoryRound.payouts.length} bettors)`
+                            : `Payouts (${selectedHistoryRound.payouts.length} winners)`
+                          }
                         </h4>
                         {selectedHistoryRound.payouts.length === 0 ? (
                           <p className="text-white/40 text-sm">No winners for this round</p>

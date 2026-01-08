@@ -43,11 +43,11 @@ export function Countdown({ endTime, onEnd, compact = false }: CountdownProps) {
   }
 
   return (
-    <div className="flex items-center justify-center gap-2">
+    <div className="flex items-center justify-center gap-1">
       <TimeUnit value={mounted ? hours : "--"} label="HRS" />
-      <span className="text-neon-purple text-3xl font-bold animate-pulse">:</span>
+      <span className="text-neon-purple text-xl font-bold animate-pulse">:</span>
       <TimeUnit value={mounted ? minutes : "--"} label="MIN" />
-      <span className="text-neon-purple text-3xl font-bold animate-pulse">:</span>
+      <span className="text-neon-purple text-xl font-bold animate-pulse">:</span>
       <TimeUnit value={mounted ? seconds : "--"} label="SEC" />
     </div>
   );
@@ -56,10 +56,10 @@ export function Countdown({ endTime, onEnd, compact = false }: CountdownProps) {
 function TimeUnit({ value, label }: { value: string; label: string }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="countdown-digit bg-void-light px-4 py-2 rounded-lg border border-neon-cyan/30">
+      <div className="countdown-digit bg-void-light px-2 py-1 rounded-lg border border-neon-cyan/30 text-lg">
         {value}
       </div>
-      <span className="text-xs text-white/40 mt-1">{label}</span>
+      <span className="text-[10px] text-white/40 mt-0.5">{label}</span>
     </div>
   );
 }

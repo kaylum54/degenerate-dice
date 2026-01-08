@@ -289,7 +289,7 @@ export default function Home() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-neon-purple font-bold">4.</span>
-                  <span className="text-white/80">Wait for 15min round to end</span>
+                  <span className="text-white/80">Wait for {ROUND_DURATION_MS / 60000}min round to end</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-neon-cyan font-bold">5.</span>
@@ -297,7 +297,10 @@ export default function Home() {
                 </li>
               </ol>
               <div className="mt-4 p-2 bg-neon-orange/10 rounded text-xs text-white/60">
-                <strong className="text-neon-orange">Fair Play:</strong> Betting closes 2 min after round starts - no last-second advantage!
+                <strong className="text-neon-orange">Fair Play:</strong> Betting closes {BETTING_WINDOW_MS / 60000} min after round starts - no last-second advantage!
+              </div>
+              <div className="mt-2 p-2 bg-neon-cyan/10 rounded text-xs text-white/60">
+                <strong className="text-neon-cyan">Min 2 Players:</strong> Rounds need 2+ unique bettors to play. Less than 2? Full refund, no fee!
               </div>
             </div>
 

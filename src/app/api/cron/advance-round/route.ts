@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { storage, PREVIEW_WINDOW_MS } from "@/lib/storage";
+import { storage, PREVIEW_WINDOW_MS, RoundHistoryEntry } from "@/lib/storage";
 import { getTokensForNewRound, fetchTokenPricesByIds } from "@/lib/coingecko";
 import { processPayouts, isPayoutConfigured } from "@/lib/payout";
 
@@ -22,65 +22,133 @@ export async function GET() {
 
     // Check if live round has ended
     if (liveRound && now >= liveRound.endTime) {
-      // End the live round
-      const tokenIds = liveRound.tokens.map((t) => t.id);
-      const priceMap = await fetchTokenPricesByIds(tokenIds);
+      // Check for minimum 2 unique bettors
+      const uniqueWallets = new Set(liveRound.bets.map((bet) => bet.wallet));
+      const uniqueBettorCount = uniqueWallets.size;
 
-      const endPrices: Record<string, number> = {};
-      liveRound.tokens.forEach((token) => {
-        endPrices[token.symbol] = priceMap[token.id] || 0;
-      });
+      // If less than 2 unique bettors, refund all bets
+      if (uniqueBettorCount < 2 && liveRound.bets.length > 0) {
+        // Process refunds - return full bet amount (no fee)
+        const refunds = liveRound.bets.map((bet) => ({
+          wallet: bet.wallet,
+          amount: bet.amount,
+        }));
 
-      // Calculate winner
-      let maxChange = -Infinity;
-      let winner = liveRound.tokens[0]?.symbol || "UNKNOWN";
-
-      liveRound.tokens.forEach((token) => {
-        const startPrice = liveRound.startPrices[token.symbol] || 0;
-        const endPrice = endPrices[token.symbol] || 0;
-        const change = startPrice > 0 ? ((endPrice - startPrice) / startPrice) * 100 : 0;
-
-        if (change > maxChange) {
-          maxChange = change;
-          winner = token.symbol;
-        }
-      });
-
-      // End the round
-      await storage.endRound(endPrices, winner);
-      actions.push(`Ended live round. Winner: ${winner} (${maxChange.toFixed(2)}%)`);
-
-      // Calculate payouts
-      const payouts = await storage.calculatePayouts(liveRound.id);
-
-      // Send automated payouts if configured
-      if (payouts.length > 0 && isPayoutConfigured()) {
-        const payoutResult = await processPayouts(payouts);
-        actions.push(
-          `Sent ${payoutResult.results.length - payoutResult.failedCount}/${payoutResult.results.length} payouts (${payoutResult.totalPaid.toFixed(4)} SOL)`
-        );
-
-        // Update leaderboard for successful payouts
-        for (const result of payoutResult.results) {
-          if (result.success) {
-            await storage.updateLeaderboard(result.wallet, result.amount);
-          }
+        let refundResult = null;
+        if (isPayoutConfigured()) {
+          refundResult = await processPayouts(refunds);
+          actions.push(
+            `Refunded ${refundResult.results.length - refundResult.failedCount}/${refundResult.results.length} bets (${refundResult.totalPaid.toFixed(4)} SOL) - not enough players`
+          );
+        } else {
+          actions.push(`Round needs refund - only ${uniqueBettorCount} unique bettor(s) - manual refund required`);
         }
 
-        // Log failed payouts
-        const failedPayouts = payoutResult.results.filter((r) => !r.success);
-        if (failedPayouts.length > 0) {
-          console.error("Failed payouts:", failedPayouts);
-          actions.push(`WARNING: ${failedPayouts.length} payouts failed`);
+        // End round with no winner (refund scenario)
+        const refundedRound = await storage.endRound({}, "REFUNDED");
+
+        // Save to history as refunded
+        if (refundedRound) {
+          const historyEntry: RoundHistoryEntry = {
+            round: refundedRound,
+            payouts: refunds.map((r) => ({
+              wallet: r.wallet,
+              amount: r.amount,
+              betAmount: r.amount,
+              txSignature: refundResult?.results.find((res) => res.wallet === r.wallet && res.success)?.signature,
+            })),
+            priceChanges: [],
+            settledAt: Date.now(),
+          };
+          await storage.saveRoundToHistory(historyEntry);
         }
-      } else if (payouts.length > 0) {
-        // Payouts not configured - just update leaderboard
-        for (const { wallet, amount } of payouts) {
-          await storage.updateLeaderboard(wallet, amount);
-        }
-        actions.push(`Recorded ${payouts.length} payouts (manual payout required - auto-payout not configured)`);
       } else {
-        actions.push("No winners this round");
+        // Normal round with 2+ unique bettors - determine winner
+        const tokenIds = liveRound.tokens.map((t) => t.id);
+        const priceMap = await fetchTokenPricesByIds(tokenIds);
+
+        const endPrices: Record<string, number> = {};
+        liveRound.tokens.forEach((token) => {
+          endPrices[token.symbol] = priceMap[token.id] || 0;
+        });
+
+        // Calculate winner
+        let maxChange = -Infinity;
+        let winner = liveRound.tokens[0]?.symbol || "UNKNOWN";
+
+        const priceChanges = liveRound.tokens.map((token) => {
+          const startPrice = liveRound.startPrices[token.symbol] || 0;
+          const endPrice = endPrices[token.symbol] || 0;
+          const change = startPrice > 0 ? ((endPrice - startPrice) / startPrice) * 100 : 0;
+
+          if (change > maxChange) {
+            maxChange = change;
+            winner = token.symbol;
+          }
+
+          return { symbol: token.symbol, startPrice, endPrice, change };
+        });
+
+        // End the round
+        const settledRound = await storage.endRound(endPrices, winner);
+        actions.push(`Ended live round. Winner: ${winner} (${maxChange.toFixed(2)}%)`);
+
+        // Calculate payouts
+        const payouts = await storage.calculatePayouts(liveRound.id);
+
+        // Send automated payouts if configured
+        let payoutResult = null;
+        if (payouts.length > 0 && isPayoutConfigured()) {
+          payoutResult = await processPayouts(payouts);
+          actions.push(
+            `Sent ${payoutResult.results.length - payoutResult.failedCount}/${payoutResult.results.length} payouts (${payoutResult.totalPaid.toFixed(4)} SOL)`
+          );
+
+          // Update leaderboard for successful payouts
+          for (const result of payoutResult.results) {
+            if (result.success) {
+              await storage.updateLeaderboard(result.wallet, result.amount);
+            }
+          }
+
+          // Log failed payouts
+          const failedPayouts = payoutResult.results.filter((r) => !r.success);
+          if (failedPayouts.length > 0) {
+            console.error("Failed payouts:", failedPayouts);
+            actions.push(`WARNING: ${failedPayouts.length} payouts failed`);
+          }
+        } else if (payouts.length > 0) {
+          // Payouts not configured - just update leaderboard
+          for (const { wallet, amount } of payouts) {
+            await storage.updateLeaderboard(wallet, amount);
+          }
+          actions.push(`Recorded ${payouts.length} payouts (manual payout required - auto-payout not configured)`);
+        } else {
+          actions.push("No winners this round");
+        }
+
+        // Save to history
+        if (settledRound) {
+          const winningBets = settledRound.bets.filter((bet) => bet.token === winner);
+          const payoutsWithBetAmount = payouts.map((p) => {
+            const winningBet = winningBets.find((b) => b.wallet === p.wallet);
+            const payoutTx = payoutResult?.results.find((r) => r.wallet === p.wallet && r.success);
+            return {
+              wallet: p.wallet,
+              amount: p.amount,
+              betAmount: winningBet?.amount || 0,
+              txSignature: payoutTx?.signature,
+            };
+          });
+
+          const historyEntry: RoundHistoryEntry = {
+            round: settledRound,
+            payouts: payoutsWithBetAmount,
+            priceChanges,
+            settledAt: Date.now(),
+          };
+          await storage.saveRoundToHistory(historyEntry);
+        }
       }
 
       // Promote next round to live if it exists

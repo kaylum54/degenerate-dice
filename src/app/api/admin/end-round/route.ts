@@ -41,6 +41,58 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for minimum 2 unique bettors
+    const uniqueWallets = new Set(liveRound.bets.map((bet) => bet.wallet));
+    const uniqueBettorCount = uniqueWallets.size;
+
+    // If less than 2 unique bettors, refund all bets
+    if (uniqueBettorCount < 2 && liveRound.bets.length > 0) {
+      // Process refunds - return full bet amount (no fee)
+      const refunds = liveRound.bets.map((bet) => ({
+        wallet: bet.wallet,
+        amount: bet.amount, // Full refund, no fee
+      }));
+
+      let refundResult = null;
+      if (isPayoutConfigured()) {
+        refundResult = await processPayouts(refunds);
+      }
+
+      // End round with no winner (refund scenario)
+      const refundedRound = await storage.endRound({}, "REFUNDED");
+
+      // Save to history as refunded
+      const historyEntry: RoundHistoryEntry = {
+        round: refundedRound!,
+        payouts: refunds.map((r) => ({
+          wallet: r.wallet,
+          amount: r.amount,
+          betAmount: r.amount,
+          txSignature: refundResult?.results.find((res) => res.wallet === r.wallet && res.success)?.signature,
+        })),
+        priceChanges: [],
+        settledAt: Date.now(),
+      };
+      await storage.saveRoundToHistory(historyEntry);
+
+      return NextResponse.json({
+        success: true,
+        refunded: true,
+        reason: `Only ${uniqueBettorCount} unique bettor(s) - minimum 2 required`,
+        round: refundedRound,
+        refunds,
+        refundResult: refundResult
+          ? {
+              totalRefunded: refundResult.totalPaid,
+              successCount: refundResult.results.length - refundResult.failedCount,
+              failedCount: refundResult.failedCount,
+            }
+          : null,
+        autoPayoutEnabled: isPayoutConfigured(),
+        message: `Round refunded! Only ${uniqueBettorCount} unique bettor(s) - need at least 2 to play.`,
+      });
+    }
+
     // Fetch current prices for the round's tokens
     const tokenIds = liveRound.tokens.map((t) => t.id);
     const priceMap = await fetchTokenPricesByIds(tokenIds);

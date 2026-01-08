@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { RoundToken } from "@/lib/coingecko";
 import { formatPrice, formatPercentage } from "@/lib/utils";
 import Image from "next/image";
@@ -23,7 +24,26 @@ export function TokenCard({
   onSelect,
   disabled = false,
 }: TokenCardProps) {
+  const [copied, setCopied] = useState(false);
   const isPositive = change24h >= 0;
+
+  const copyAddress = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card selection
+    if (!token.address) return;
+
+    try {
+      await navigator.clipboard.writeText(token.address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const shortenAddress = (addr: string) => {
+    if (addr.length <= 12) return addr;
+    return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
+  };
 
   return (
     <button
@@ -86,6 +106,24 @@ export function TokenCard({
             {betCount}
           </span>
         </div>
+
+        {/* Contract Address */}
+        {token.address && (
+          <div className="pt-2 border-t border-white/10 mt-2">
+            <button
+              onClick={copyAddress}
+              className="w-full flex items-center justify-between gap-1 text-xs hover:bg-white/5 rounded px-1 py-0.5 transition-colors"
+            >
+              <span className="text-white/40">CA:</span>
+              <span className="font-mono text-neon-cyan/70 truncate">
+                {shortenAddress(token.address)}
+              </span>
+              <span className={`text-[10px] ${copied ? "text-neon-cyan" : "text-white/40"}`}>
+                {copied ? "Copied!" : "Copy"}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Hover Glow Effect */}
