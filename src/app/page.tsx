@@ -32,14 +32,12 @@ export default function Home() {
 
   // Show winner modal when a new round settles
   useEffect(() => {
+    console.log("Winner modal check - FULL DATA:", lastSettledRound);
     console.log("Winner modal check:", {
-      lastSettledRound: lastSettledRound ? {
-        roundId: lastSettledRound.round?.id,
-        winner: lastSettledRound.round?.winner,
-        settledAt: lastSettledRound.settledAt,
-      } : null,
+      hasData: !!lastSettledRound,
+      keys: lastSettledRound ? Object.keys(lastSettledRound) : [],
+      roundId: lastSettledRound?.round?.id,
       lastShownRoundId: lastShownRoundId.current,
-      shouldShow: lastSettledRound?.round?.id && lastSettledRound.round.id !== lastShownRoundId.current,
     });
 
     if (lastSettledRound?.round?.id && lastSettledRound.round.id !== lastShownRoundId.current) {

@@ -83,8 +83,8 @@ const kvRest = {
       });
       const data = await res.json();
       if (data.result === null) return null;
-      // Parse JSON if it's a stringified object
-      if (typeof data.result === "string" && data.result.startsWith("{")) {
+      // Parse JSON if it's a stringified object or array
+      if (typeof data.result === "string" && (data.result.startsWith("{") || data.result.startsWith("["))) {
         return JSON.parse(data.result) as T;
       }
       return data.result as T;
