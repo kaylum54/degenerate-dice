@@ -102,10 +102,13 @@ export async function fetchNewSolanaTokens(): Promise<SolanaToken[]> {
       return [];
     });
 
-    // Also fetch boosted tokens
+    // Also fetch boosted tokens (with error handling)
     const boostPromise = fetch(`${DEXSCREENER_API}/token-boosts/top/v1`, {
       headers: { accept: "application/json" },
       next: { revalidate: 300 },
+    }).catch((e) => {
+      console.error("Error fetching boosted tokens:", e);
+      return null;
     });
 
     const [searchResults, boostResponse] = await Promise.all([
@@ -119,7 +122,7 @@ export async function fetchNewSolanaTokens(): Promise<SolanaToken[]> {
     }
 
     // Process boosted tokens
-    if (boostResponse.ok) {
+    if (boostResponse && boostResponse.ok) {
       const boostData = await boostResponse.json();
       const boostTokens = Array.isArray(boostData) ? boostData : [];
       // Fetch pair data for top boosted Solana tokens

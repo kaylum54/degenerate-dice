@@ -14,11 +14,21 @@ export const maxDuration = 60; // Allow up to 60 seconds for this endpoint (payo
 
 export async function GET() {
   try {
+    console.log("Cron: Starting round advancement check...");
     const actions: string[] = [];
 
     const liveRound = await storage.getLiveRound();
     const nextRound = await storage.getNextRound();
     const now = Date.now();
+
+    console.log("Cron: Current state -", {
+      hasLiveRound: !!liveRound,
+      hasNextRound: !!nextRound,
+      liveRoundId: liveRound?.id,
+      liveRoundEndTime: liveRound?.endTime,
+      now,
+      liveRoundEnded: liveRound ? now >= liveRound.endTime : false,
+    });
 
     // Check if live round has ended
     if (liveRound && now >= liveRound.endTime) {
@@ -210,17 +220,26 @@ export async function GET() {
 
     // If no live round AND no next round exists, start a fresh one
     if (!currentLiveRound && !currentNextRound) {
-      const tokens = await getTokensForNewRound(6);
-      const tokenIds = tokens.map((t) => t.id);
-      const priceMap = await fetchTokenPricesByIds(tokenIds);
+      console.log("Cron: No live or next round - starting fresh round...");
+      try {
+        const tokens = await getTokensForNewRound(6);
+        console.log("Cron: Got tokens for new round:", tokens.map(t => t.symbol));
 
-      const startPrices: Record<string, number> = {};
-      tokens.forEach((token) => {
-        startPrices[token.symbol] = priceMap[token.id] || 0;
-      });
+        const tokenIds = tokens.map((t) => t.id);
+        const priceMap = await fetchTokenPricesByIds(tokenIds);
+        console.log("Cron: Got price map:", Object.keys(priceMap).length, "prices");
 
-      await storage.startNewLiveRound(tokens, startPrices);
-      actions.push(`Started initial round with tokens: ${tokens.map(t => t.symbol).join(", ")}`);
+        const startPrices: Record<string, number> = {};
+        tokens.forEach((token) => {
+          startPrices[token.symbol] = priceMap[token.id] || 0;
+        });
+
+        await storage.startNewLiveRound(tokens, startPrices);
+        actions.push(`Started initial round with tokens: ${tokens.map(t => t.symbol).join(", ")}`);
+      } catch (tokenError) {
+        console.error("Cron: Error fetching tokens for new round:", tokenError);
+        throw tokenError;
+      }
     }
 
     return NextResponse.json({
