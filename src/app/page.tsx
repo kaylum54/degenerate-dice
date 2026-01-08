@@ -28,8 +28,6 @@ export default function Home() {
 
   // Determine which round to show for betting
   const bettingRound = betting.target === "next" ? nextRound : liveRound;
-  const bettingRoundCounts = betting.target === "next" ? nextBetCounts : liveBetCounts;
-  const bettingRoundTokens = bettingRound?.tokens || [];
 
   // Format time for display
   const formatTimeRemaining = (ms: number) => {
