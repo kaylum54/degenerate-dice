@@ -75,7 +75,7 @@ const TOKEN_COLORS = [
 const DEXSCREENER_API = "https://api.dexscreener.com";
 const COINGECKO_API = "https://api.coingecko.com/api/v3";
 
-// Fetch top 50 Solana tokens created in the last 7 days from DexScreener
+// Fetch top 50 Solana tokens created in the last 14 days from DexScreener
 export async function fetchNewSolanaTokens(): Promise<SolanaToken[]> {
   try {
     // Use DexScreener's token boosted API for Solana to find trending new tokens
@@ -124,12 +124,12 @@ export async function fetchNewSolanaTokens(): Promise<SolanaToken[]> {
       allPairs.push(...searchPairs);
     }
 
-    // Filter to Solana pairs created in the last 7 days
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    // Filter to Solana pairs created in the last 14 days
+    const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
 
     const solanaPairs = allPairs.filter((pair) => {
       const isSOL = pair.chainId === "solana";
-      const isNew = pair.pairCreatedAt && pair.pairCreatedAt > sevenDaysAgo;
+      const isNew = pair.pairCreatedAt && pair.pairCreatedAt > fourteenDaysAgo;
       const hasLiquidity = (pair.liquidity?.usd || 0) > 5000; // Min $5k liquidity
       const hasVolume = (pair.volume?.h24 || 0) > 1000; // Min $1k 24h volume
       const isNotStable = !["USDC", "USDT", "SOL", "WSOL", "WETH", "USDE"].includes(
@@ -168,7 +168,7 @@ export async function fetchNewSolanaTokens(): Promise<SolanaToken[]> {
       });
     }
 
-    console.log(`Fetched ${uniqueTokens.length} new Solana tokens from DexScreener (created in last 7 days)`);
+    console.log(`Fetched ${uniqueTokens.length} new Solana tokens from DexScreener (created in last 14 days)`);
 
     if (uniqueTokens.length < 6) {
       console.log("Not enough new tokens, falling back to top Solana tokens");
@@ -252,10 +252,14 @@ export function selectRandomTokens(
     return getFallbackTokens();
   }
 
-  // Filter out tokens with very low volume
+  // Filter out tokens with very low volume, no price, or 0% change (looks bad for users)
   const validTokens = tokens.filter(
-    (t) => t.total_volume > 1000 && t.current_price > 0
+    (t) => t.total_volume > 1000 &&
+           t.current_price > 0 &&
+           Math.abs(t.price_change_percentage_24h) > 0.01 // Exclude 0.00% change
   );
+
+  console.log(`Token selection: ${tokens.length} total, ${validTokens.length} after filtering out 0% change`);
 
   if (validTokens.length < count) {
     console.log(`Only ${validTokens.length} valid tokens, using fallback`);

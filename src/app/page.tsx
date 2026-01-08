@@ -65,7 +65,7 @@ export default function Home() {
             <div className="text-neon-purple text-sm">{BETTING_WINDOW_MS / 60000}min betting window</div>
           </div>
           <p className="text-white/40 text-xs mt-4">
-            6 random tokens from new Solana coins (created last 7 days)
+            6 random tokens from new Solana coins (created last 14 days)
           </p>
           {/* Token CA */}
           <div className="mt-6 inline-flex items-center gap-2 bg-neon-purple/10 border border-neon-purple/30 rounded-full px-4 py-2">
