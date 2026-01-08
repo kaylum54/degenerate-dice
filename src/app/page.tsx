@@ -32,7 +32,7 @@ export default function Home() {
 
   // Show winner modal when a new round settles
   useEffect(() => {
-    if (lastSettledRound && lastSettledRound.round.id !== lastShownRoundId.current) {
+    if (lastSettledRound?.round?.id && lastSettledRound.round.id !== lastShownRoundId.current) {
       // New settled round detected - show the modal
       setModalRound(lastSettledRound);
       setShowWinnerModal(true);
