@@ -12,6 +12,11 @@ export async function GET() {
     // Get the most recent settled round for winner announcements
     const roundHistory = await storage.getRoundHistory(1);
     const lastSettledRound = roundHistory.length > 0 ? roundHistory[0] : null;
+    console.log("Round API - lastSettledRound:", lastSettledRound ? {
+      roundId: lastSettledRound.round?.id,
+      winner: lastSettledRound.round?.winner,
+      settledAt: lastSettledRound.settledAt,
+    } : null);
 
     // Get bet counts for both rounds
     const liveBetCounts = liveRound ? await storage.getBetCountsByToken(liveRound.id) : {};
