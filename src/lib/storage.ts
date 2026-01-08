@@ -5,9 +5,9 @@
 import { RoundToken } from "./coingecko";
 
 // Round timing constants
-export const ROUND_DURATION_MS = 15 * 60 * 1000; // 15 minutes
-export const BETTING_WINDOW_MS = 2 * 60 * 1000; // 2 minutes - betting allowed after round goes live
-export const PREVIEW_WINDOW_MS = 2 * 60 * 1000; // 2 minutes - next round revealed before current ends
+export const ROUND_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+export const BETTING_WINDOW_MS = 1 * 60 * 1000; // 1 minute - betting allowed after round goes live
+export const PREVIEW_WINDOW_MS = 1 * 60 * 1000; // 1 minute - next round revealed before current ends
 
 export interface Bet {
   id: string;
