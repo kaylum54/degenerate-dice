@@ -99,7 +99,7 @@ export default function Home() {
           {/* Token CA */}
           <div className="mt-6 inline-flex items-center gap-2 bg-neon-purple/10 border border-neon-purple/30 rounded-full px-4 py-2">
             <span className="text-neon-purple font-orbitron text-sm">CA:</span>
-            <span className="text-white/60 text-sm font-mono">Coming Soon</span>
+            <span className="text-white/60 text-sm font-mono">2c9e6ABoria7PzTTiWCgHQNJkYFW2v8avkPTW1jTpump</span>
           </div>
         </section>
 

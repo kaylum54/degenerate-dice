@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 500" width="1500" height="500">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="50%" style="stop-color:#12121a"/>
+      <stop offset="100%" style="stop-color:#0a0a0f"/>
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#9D4EDD"/>
+      <stop offset="50%" style="stop-color:#F72585"/>
+      <stop offset="100%" style="stop-color:#00F5D4"/>
+    </linearGradient>
+    <linearGradient id="diceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9D4EDD"/>
+      <stop offset="50%" style="stop-color:#F72585"/>
+      <stop offset="100%" style="stop-color:#00F5D4"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="textGlow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1500" height="500" fill="url(#bgGradient)"/>
+
+  <!-- Grid pattern -->
+  <g stroke="#9D4EDD" stroke-opacity="0.1" stroke-width="1">
+    <line x1="0" y1="100" x2="1500" y2="100"/>
+    <line x1="0" y1="200" x2="1500" y2="200"/>
+    <line x1="0" y1="300" x2="1500" y2="300"/>
+    <line x1="0" y1="400" x2="1500" y2="400"/>
+    <line x1="300" y1="0" x2="300" y2="500"/>
+    <line x1="600" y1="0" x2="600" y2="500"/>
+    <line x1="900" y1="0" x2="900" y2="500"/>
+    <line x1="1200" y1="0" x2="1200" y2="500"/>
+  </g>
+
+  <!-- Left dice -->
+  <g transform="translate(150, 150) rotate(-15)">
+    <rect x="0" y="0" width="120" height="120" rx="15" ry="15"
+          fill="url(#diceGrad)" stroke="#00F5D4" stroke-width="2" filter="url(#glow)"/>
+    <g fill="#0a0a0f">
+      <circle cx="35" cy="35" r="10"/>
+      <circle cx="85" cy="35" r="10"/>
+      <circle cx="60" cy="60" r="10"/>
+      <circle cx="35" cy="85" r="10"/>
+      <circle cx="85" cy="85" r="10"/>
+    </g>
+  </g>
+
+  <!-- Right dice -->
+  <g transform="translate(1230, 150) rotate(15)">
+    <rect x="0" y="0" width="120" height="120" rx="15" ry="15"
+          fill="url(#diceGrad)" stroke="#00F5D4" stroke-width="2" filter="url(#glow)"/>
+    <g fill="#0a0a0f">
+      <circle cx="35" cy="35" r="10"/>
+      <circle cx="85" cy="85" r="10"/>
+      <circle cx="60" cy="60" r="10"/>
+    </g>
+  </g>
+
+  <!-- Main text -->
+  <text x="750" y="220" text-anchor="middle" font-family="'Orbitron', 'Arial Black', sans-serif" font-size="90" font-weight="900" fill="url(#textGradient)" filter="url(#textGlow)">
+    DEGENERATE DICE
+  </text>
+
+  <!-- Tagline -->
+  <text x="750" y="290" text-anchor="middle" font-family="'Space Mono', monospace" font-size="28" fill="#00F5D4" opacity="0.9">
+    Bet on the pump. Winner takes all.
+  </text>
+
+  <!-- Bottom info bar -->
+  <g font-family="'Space Mono', monospace" font-size="18" fill="white" opacity="0.6">
+    <text x="400" y="400" text-anchor="middle">SOLANA</text>
+    <text x="750" y="400" text-anchor="middle">5 MIN ROUNDS</text>
+    <text x="1100" y="400" text-anchor="middle">MEMECOINS</text>
+  </g>
+
+  <!-- Decorative lines -->
+  <line x1="300" y1="385" x2="500" y2="385" stroke="#9D4EDD" stroke-width="2" opacity="0.5"/>
+  <line x1="600" y1="385" x2="900" y2="385" stroke="#F72585" stroke-width="2" opacity="0.5"/>
+  <line x1="1000" y1="385" x2="1200" y2="385" stroke="#00F5D4" stroke-width="2" opacity="0.5"/>
+
+  <!-- Accent dots -->
+  <circle cx="550" y="400" r="4" fill="#9D4EDD"/>
+  <circle cx="950" y="400" r="4" fill="#00F5D4"/>
+</svg>
