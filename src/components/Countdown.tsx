@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { formatTimeRemaining } from "@/lib/utils";
+import { playSound } from "@/hooks/useSounds";
 
 interface CountdownProps {
   endTime: number;
@@ -13,6 +14,7 @@ export function Countdown({ endTime, onEnd, compact = false }: CountdownProps) {
   // Start with placeholder to avoid hydration mismatch
   const [timeRemaining, setTimeRemaining] = useState("--:--:--");
   const [mounted, setMounted] = useState(false);
+  const lastTickRef = useRef<number>(-1);
 
   useEffect(() => {
     setMounted(true);
@@ -22,6 +24,20 @@ export function Countdown({ endTime, onEnd, compact = false }: CountdownProps) {
     const interval = setInterval(() => {
       const remaining = formatTimeRemaining(endTime);
       setTimeRemaining(remaining);
+
+      // Calculate seconds remaining for sound effects
+      const msRemaining = endTime - Date.now();
+      const secondsRemaining = Math.floor(msRemaining / 1000);
+
+      // Play tick sound for last 10 seconds (only once per second)
+      if (secondsRemaining <= 10 && secondsRemaining > 0 && secondsRemaining !== lastTickRef.current) {
+        lastTickRef.current = secondsRemaining;
+        if (secondsRemaining <= 3) {
+          playSound("countdown"); // More urgent sound for last 3 seconds
+        } else {
+          playSound("tick");
+        }
+      }
 
       if (remaining === "00:00:00" && onEnd) {
         onEnd();

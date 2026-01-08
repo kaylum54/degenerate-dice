@@ -12,6 +12,7 @@ import { TokenCard } from "./TokenCard";
 import { RoundToken } from "@/lib/coingecko";
 import { TokenPrice } from "@/hooks/usePrices";
 import { MIN_BET_AMOUNT, MAX_BET_AMOUNT, DEFAULT_BET_AMOUNT, formatSOL } from "@/lib/utils";
+import { playSound } from "@/hooks/useSounds";
 
 interface BettingGridProps {
   prices: TokenPrice[];
@@ -114,10 +115,12 @@ export function BettingGrid({
       const statusText = roundStatus === "betting" ? "next round" : "current round";
       setSuccess(`Bet ${formatSOL(betAmount)} SOL on ${selectedToken} for ${statusText}! TX: ${signature.slice(0, 8)}...`);
       setSelectedToken(null);
+      playSound("bet");
       onBetPlaced();
     } catch (err) {
       console.error("Bet error:", err);
       setError(err instanceof Error ? err.message : "Failed to place bet");
+      playSound("error");
     } finally {
       setIsPlacingBet(false);
     }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { RoundHistoryEntry } from "@/lib/storage";
+import { playSound } from "@/hooks/useSounds";
 
 interface WinnerModalProps {
   settledRound: RoundHistoryEntry | null;
@@ -12,10 +13,18 @@ export function WinnerModal({ settledRound, onClose }: WinnerModalProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Animate in
-    const timer = setTimeout(() => setIsVisible(true), 50);
+    // Animate in and play sound
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+      // Play appropriate sound based on result
+      if (settledRound?.round?.winner === "REFUNDED") {
+        playSound("error");
+      } else {
+        playSound("roundEnd");
+      }
+    }, 50);
     return () => clearTimeout(timer);
-  }, []);
+  }, [settledRound]);
 
   const handleClose = () => {
     setIsVisible(false);
