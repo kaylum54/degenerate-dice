@@ -179,7 +179,7 @@ export default function Home() {
                 <div className="animate-spin w-12 h-12 border-4 border-neon-purple border-t-transparent rounded-full mx-auto mb-4" />
                 <p className="text-white/60">Loading token prices...</p>
               </div>
-            ) : !bettingRound ? (
+            ) : !liveRound && !nextRound ? (
               <div className="glass-card p-12 text-center">
                 <div className="text-6xl mb-4">🎲</div>
                 <h2 className="font-orbitron text-2xl font-bold text-neon-orange mb-2">
@@ -190,53 +190,79 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {/* Round Label */}
-                <div className="flex items-center justify-between">
-                  <h2 className="font-orbitron text-lg font-bold">
-                    {betting.target === "next" ? (
-                      <span className="text-neon-cyan">Betting on Next Round</span>
-                    ) : betting.status === "locked" ? (
-                      <span className="text-neon-orange">Current Round (Betting Locked)</span>
-                    ) : (
-                      <span className="text-neon-pink">Current Round</span>
-                    )}
-                  </h2>
-                  {betting.endsIn && betting.endsIn > 0 && betting.status === "open" && (
-                    <span className="text-xs text-white/40 bg-neon-cyan/10 px-3 py-1 rounded-full">
-                      Betting closes in {formatTimeRemaining(betting.endsIn)}
-                    </span>
-                  )}
-                </div>
-
-                <BettingGrid
-                  prices={prices}
-                  tokens={bettingRoundTokens}
-                  betCounts={bettingRoundCounts}
-                  onBetPlaced={handleBetPlaced}
-                  roundId={bettingRound.id}
-                  roundStatus={betting.status === "locked" ? "settled" : bettingRound.status === "preview" ? "betting" : "live"}
-                />
-              </div>
-            )}
-
-            {/* Next Round Preview (when betting is locked on live round) */}
-            {nextRound && betting.status !== "open" && (
-              <div className="mt-6 glass-card p-6 border border-neon-cyan/30">
-                <h3 className="font-orbitron text-lg font-bold text-neon-cyan mb-4">
-                  Next Round Preview
-                </h3>
-                <p className="text-white/60 text-sm mb-4">
-                  These tokens will be in the next round. Betting opens when current round has ~2 min left.
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {nextRound.tokens.map((token) => (
-                    <div key={token.symbol} className="bg-void-light rounded-lg p-3 text-center">
-                      <div className="text-2xl mb-1">{token.image ? "🪙" : "🎰"}</div>
-                      <div className="text-neon-cyan font-bold text-sm">{token.symbol}</div>
+              <div className="space-y-6">
+                {/* Live Round - Always show when exists */}
+                {liveRound && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="font-orbitron text-lg font-bold">
+                        <span className={betting.target === "next" || betting.status === "locked" ? "text-neon-orange" : "text-neon-pink"}>
+                          {betting.target === "next" ? "Live Round (Watching Prices)" :
+                           betting.status === "locked" ? "Current Round (Betting Locked)" : "Current Round"}
+                        </span>
+                      </h2>
+                      {betting.target !== "next" && betting.status === "open" && betting.endsIn && betting.endsIn > 0 && (
+                        <span className="text-xs text-white/40 bg-neon-pink/10 px-3 py-1 rounded-full">
+                          Betting closes in {formatTimeRemaining(betting.endsIn)}
+                        </span>
+                      )}
                     </div>
-                  ))}
-                </div>
+
+                    <BettingGrid
+                      prices={prices}
+                      tokens={liveRound.tokens}
+                      betCounts={liveBetCounts}
+                      onBetPlaced={handleBetPlaced}
+                      roundId={liveRound.id}
+                      roundStatus={betting.target === "next" || betting.status === "locked" ? "settled" : "live"}
+                    />
+                  </div>
+                )}
+
+                {/* Next Round - Show with betting when preview is open */}
+                {nextRound && betting.target === "next" && (
+                  <div className="space-y-4 pt-4 border-t border-neon-cyan/30">
+                    <div className="flex items-center justify-between">
+                      <h2 className="font-orbitron text-lg font-bold">
+                        <span className="text-neon-cyan">Next Round (Betting Open)</span>
+                      </h2>
+                      {betting.endsIn && betting.endsIn > 0 && (
+                        <span className="text-xs text-white/40 bg-neon-cyan/10 px-3 py-1 rounded-full">
+                          Betting closes in {formatTimeRemaining(betting.endsIn)}
+                        </span>
+                      )}
+                    </div>
+
+                    <BettingGrid
+                      prices={prices}
+                      tokens={nextRound.tokens}
+                      betCounts={nextBetCounts}
+                      onBetPlaced={handleBetPlaced}
+                      roundId={nextRound.id}
+                      roundStatus="betting"
+                    />
+                  </div>
+                )}
+
+                {/* Next Round Preview (when betting is NOT open yet) */}
+                {nextRound && betting.target !== "next" && betting.status === "locked" && (
+                  <div className="glass-card p-6 border border-neon-cyan/30">
+                    <h3 className="font-orbitron text-lg font-bold text-neon-cyan mb-4">
+                      Next Round Preview
+                    </h3>
+                    <p className="text-white/60 text-sm mb-4">
+                      These tokens will be in the next round. Betting opens soon.
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {nextRound.tokens.map((token) => (
+                        <div key={token.symbol} className="bg-void-light rounded-lg p-3 text-center">
+                          <div className="text-2xl mb-1">{token.image ? "🪙" : "🎰"}</div>
+                          <div className="text-neon-cyan font-bold text-sm">{token.symbol}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

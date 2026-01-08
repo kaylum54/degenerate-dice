@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
-import { Round, Bet, ROUND_DURATION_MS } from "@/lib/storage";
+import { Round, Bet, ROUND_DURATION_MS, RoundHistoryEntry } from "@/lib/storage";
 import { formatSOL, shortenAddress, formatTimestamp } from "@/lib/utils";
 
 export default function AdminPage() {
@@ -16,6 +16,8 @@ export default function AdminPage() {
     changes: { symbol: string; change: number }[];
     payouts: { wallet: string; amount: number }[];
   } | null>(null);
+  const [roundHistory, setRoundHistory] = useState<RoundHistoryEntry[]>([]);
+  const [selectedHistoryRound, setSelectedHistoryRound] = useState<RoundHistoryEntry | null>(null);
 
   // Fetch current round
   const fetchRound = async () => {
@@ -28,9 +30,23 @@ export default function AdminPage() {
     }
   };
 
+  // Fetch round history
+  const fetchHistory = async () => {
+    try {
+      const response = await fetch(`/api/admin/history?password=${encodeURIComponent(password)}&limit=20`);
+      const data = await response.json();
+      if (data.history) {
+        setRoundHistory(data.history);
+      }
+    } catch (error) {
+      console.error("Failed to fetch round history:", error);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchRound();
+      fetchHistory();
       const interval = setInterval(fetchRound, 3000);
       return () => clearInterval(interval);
     }
@@ -94,6 +110,7 @@ export default function AdminPage() {
           payouts: data.payouts,
         });
         fetchRound();
+        fetchHistory(); // Refresh history after ending round
       } else {
         setMessage({ type: "error", text: data.error });
       }
@@ -346,6 +363,209 @@ export default function AdminPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+
+          {/* Round History */}
+          <div className="glass-card p-6 lg:col-span-2">
+            <h2 className="font-orbitron text-xl font-bold text-white mb-4">
+              Round History (Audit Log)
+            </h2>
+
+            {roundHistory.length === 0 ? (
+              <p className="text-white/40">No completed rounds yet</p>
+            ) : (
+              <div className="space-y-4">
+                {/* History List */}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-left text-white/40 text-sm border-b border-white/10">
+                        <th className="pb-2">Round ID</th>
+                        <th className="pb-2">Winner</th>
+                        <th className="pb-2">Pool</th>
+                        <th className="pb-2">Bets</th>
+                        <th className="pb-2">Settled At</th>
+                        <th className="pb-2">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {roundHistory.map((entry) => (
+                        <tr key={entry.round.id} className="border-b border-white/5 hover:bg-white/5">
+                          <td className="py-2 font-mono text-white/60">
+                            {entry.round.id.slice(-12)}
+                          </td>
+                          <td className="py-2 text-neon-cyan font-bold">
+                            {entry.round.winner}
+                          </td>
+                          <td className="py-2 font-mono">
+                            {formatSOL(entry.round.totalPool)} SOL
+                          </td>
+                          <td className="py-2 text-neon-purple font-mono">
+                            {entry.round.bets.length}
+                          </td>
+                          <td className="py-2 text-white/60">
+                            {formatTimestamp(entry.settledAt)}
+                          </td>
+                          <td className="py-2">
+                            <button
+                              onClick={() => setSelectedHistoryRound(
+                                selectedHistoryRound?.round.id === entry.round.id ? null : entry
+                              )}
+                              className="text-neon-purple hover:text-neon-cyan text-sm"
+                            >
+                              {selectedHistoryRound?.round.id === entry.round.id ? "Hide Details" : "View Details"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Selected Round Details */}
+                {selectedHistoryRound && (
+                  <div className="mt-6 p-4 bg-void-light rounded-lg border border-neon-purple/30">
+                    <h3 className="font-orbitron text-lg font-bold text-neon-purple mb-4">
+                      Round Details: {selectedHistoryRound.round.id.slice(-12)}
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Price Changes */}
+                      <div>
+                        <h4 className="text-white/60 text-sm mb-2 font-bold">Price Changes</h4>
+                        <div className="space-y-1">
+                          {selectedHistoryRound.priceChanges
+                            .sort((a, b) => b.change - a.change)
+                            .map((pc) => (
+                            <div
+                              key={pc.symbol}
+                              className={`flex justify-between p-2 rounded ${
+                                pc.symbol === selectedHistoryRound.round.winner
+                                  ? "bg-neon-cyan/10 border border-neon-cyan/30"
+                                  : "bg-void"
+                              }`}
+                            >
+                              <span className={pc.symbol === selectedHistoryRound.round.winner ? "text-neon-cyan font-bold" : "text-white/80"}>
+                                {pc.symbol}
+                                {pc.symbol === selectedHistoryRound.round.winner && " (WINNER)"}
+                              </span>
+                              <span className={pc.change >= 0 ? "text-neon-cyan" : "text-neon-pink"}>
+                                {pc.change >= 0 ? "+" : ""}{pc.change.toFixed(4)}%
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Payouts */}
+                      <div>
+                        <h4 className="text-white/60 text-sm mb-2 font-bold">
+                          Payouts ({selectedHistoryRound.payouts.length} winners)
+                        </h4>
+                        {selectedHistoryRound.payouts.length === 0 ? (
+                          <p className="text-white/40 text-sm">No winners for this round</p>
+                        ) : (
+                          <div className="space-y-1 max-h-48 overflow-y-auto">
+                            {selectedHistoryRound.payouts.map((p, i) => (
+                              <div key={i} className="flex justify-between p-2 bg-void rounded text-sm">
+                                <div className="flex flex-col">
+                                  <span className="text-neon-cyan font-mono">{shortenAddress(p.wallet)}</span>
+                                  <span className="text-white/40 text-xs">Bet: {formatSOL(p.betAmount)} SOL</span>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                  <span className="text-neon-pink font-mono">{formatSOL(p.amount)} SOL</span>
+                                  {p.txSignature && (
+                                    <a
+                                      href={`https://solscan.io/tx/${p.txSignature}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-neon-purple hover:text-neon-cyan text-xs"
+                                    >
+                                      TX: {p.txSignature.slice(0, 8)}...
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* All Bets for this Round */}
+                    <div className="mt-6">
+                      <h4 className="text-white/60 text-sm mb-2 font-bold">
+                        All Bets ({selectedHistoryRound.round.bets.length} total)
+                      </h4>
+                      <div className="overflow-x-auto max-h-64 overflow-y-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-white/40 border-b border-white/10 sticky top-0 bg-void-light">
+                              <th className="pb-2 pr-4">Wallet</th>
+                              <th className="pb-2 pr-4">Token</th>
+                              <th className="pb-2 pr-4">Amount</th>
+                              <th className="pb-2 pr-4">Result</th>
+                              <th className="pb-2">TX</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedHistoryRound.round.bets
+                              .sort((a, b) => b.timestamp - a.timestamp)
+                              .map((bet: Bet) => {
+                                const isWinner = bet.token === selectedHistoryRound.round.winner;
+                                return (
+                                  <tr key={bet.id} className={`border-b border-white/5 ${isWinner ? "bg-neon-cyan/5" : ""}`}>
+                                    <td className="py-2 pr-4 text-neon-cyan font-mono">
+                                      {shortenAddress(bet.wallet)}
+                                    </td>
+                                    <td className={`py-2 pr-4 font-bold ${isWinner ? "text-neon-cyan" : "text-neon-pink"}`}>
+                                      {bet.token}
+                                    </td>
+                                    <td className="py-2 pr-4 font-mono">
+                                      {formatSOL(bet.amount)} SOL
+                                    </td>
+                                    <td className={`py-2 pr-4 font-bold ${isWinner ? "text-neon-cyan" : "text-neon-pink"}`}>
+                                      {isWinner ? "WON" : "LOST"}
+                                    </td>
+                                    <td className="py-2">
+                                      <a
+                                        href={`https://solscan.io/tx/${bet.txSignature}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-neon-purple hover:text-neon-cyan"
+                                      >
+                                        {bet.txSignature.slice(0, 8)}...
+                                      </a>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Round Summary */}
+                    <div className="mt-4 p-3 bg-void rounded border border-white/10">
+                      <div className="flex flex-wrap gap-4 text-sm">
+                        <div>
+                          <span className="text-white/40">Total Pool:</span>{" "}
+                          <span className="text-neon-pink font-mono">{formatSOL(selectedHistoryRound.round.totalPool)} SOL</span>
+                        </div>
+                        <div>
+                          <span className="text-white/40">Prize Pool (90%):</span>{" "}
+                          <span className="text-neon-cyan font-mono">{formatSOL(selectedHistoryRound.round.totalPool * 0.9)} SOL</span>
+                        </div>
+                        <div>
+                          <span className="text-white/40">Platform Fee (10%):</span>{" "}
+                          <span className="text-neon-orange font-mono">{formatSOL(selectedHistoryRound.round.totalPool * 0.1)} SOL</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

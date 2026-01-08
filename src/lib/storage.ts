@@ -47,6 +47,14 @@ export function isBettingOpen(round: Round): boolean {
   return Date.now() < round.bettingEndsAt;
 }
 
+// Round history entry for payout auditing
+export interface RoundHistoryEntry {
+  round: Round;
+  payouts: { wallet: string; amount: number; betAmount: number; txSignature?: string }[];
+  priceChanges: { symbol: string; startPrice: number; endPrice: number; change: number }[];
+  settledAt: number;
+}
+
 // KV Keys
 const KEYS = {
   LIVE_ROUND_ID: "dice:live_round_id", // Currently playing round
@@ -54,6 +62,7 @@ const KEYS = {
   ROUND: (id: string) => `dice:round:${id}`,
   LEADERBOARD: "dice:leaderboard",
   ACTIVITY_FEED: "dice:activity_feed",
+  ROUND_HISTORY: "dice:round_history", // Settled rounds for auditing
 };
 
 // Check if KV is configured
@@ -120,6 +129,7 @@ class InMemoryStorage {
   private nextRoundId: string | null = null;
   private leaderboard: Map<string, LeaderboardEntry> = new Map();
   private activityFeed: Bet[] = [];
+  private roundHistory: RoundHistoryEntry[] = [];
 
   // Get the current live round
   async getLiveRound(): Promise<Round | null> {
@@ -310,6 +320,18 @@ class InMemoryStorage {
       wallet: bet.wallet,
       amount: (bet.amount / totalWinnerBets) * prizePool,
     }));
+  }
+
+  async saveRoundToHistory(entry: RoundHistoryEntry): Promise<void> {
+    this.roundHistory.unshift(entry);
+    // Keep only last 100 rounds
+    if (this.roundHistory.length > 100) {
+      this.roundHistory = this.roundHistory.slice(0, 100);
+    }
+  }
+
+  async getRoundHistory(limit: number = 20): Promise<RoundHistoryEntry[]> {
+    return this.roundHistory.slice(0, limit);
   }
 
   seedFakeActivity(): void {
@@ -542,6 +564,18 @@ class KVStorage {
     }));
   }
 
+  async saveRoundToHistory(entry: RoundHistoryEntry): Promise<void> {
+    const history = (await kvRest.get<RoundHistoryEntry[]>(KEYS.ROUND_HISTORY)) || [];
+    history.unshift(entry);
+    // Keep only last 100 rounds
+    await kvRest.set(KEYS.ROUND_HISTORY, history.slice(0, 100));
+  }
+
+  async getRoundHistory(limit: number = 20): Promise<RoundHistoryEntry[]> {
+    const history = (await kvRest.get<RoundHistoryEntry[]>(KEYS.ROUND_HISTORY)) || [];
+    return history.slice(0, limit);
+  }
+
   seedFakeActivity(): void {
     // No-op for KV
   }
@@ -563,6 +597,8 @@ interface IStorage {
   getActivityFeed(limit?: number): Promise<Bet[]>;
   getWinners(roundId: string): Promise<Bet[]>;
   calculatePayouts(roundId: string): Promise<{ wallet: string; amount: number }[]>;
+  saveRoundToHistory(entry: RoundHistoryEntry): Promise<void>;
+  getRoundHistory(limit?: number): Promise<RoundHistoryEntry[]>;
   seedFakeActivity(): void;
 }
 

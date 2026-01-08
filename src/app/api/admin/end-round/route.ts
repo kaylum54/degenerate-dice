@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { storage } from "@/lib/storage";
+import { storage, RoundHistoryEntry } from "@/lib/storage";
 import { fetchTokenPricesByIds } from "@/lib/coingecko";
 import { processPayouts, isPayoutConfigured } from "@/lib/payout";
 
@@ -94,6 +94,36 @@ export async function POST(request: NextRequest) {
         await storage.updateLeaderboard(wallet, amount);
       }
     }
+
+    // Save round to history for auditing
+    const priceChanges = liveRound.tokens.map((token) => {
+      const startPrice = liveRound.startPrices[token.symbol] || 0;
+      const endPrice = endPrices[token.symbol] || 0;
+      const change = calculatePercentageChange(startPrice, endPrice);
+      return { symbol: token.symbol, startPrice, endPrice, change };
+    });
+
+    // Get winning bets with their bet amounts
+    const winningBets = settledRound.bets.filter((bet) => bet.token === winner);
+    const payoutsWithBetAmount = payouts.map((p) => {
+      const winningBet = winningBets.find((b) => b.wallet === p.wallet);
+      const payoutTx = payoutResult?.results.find((r) => r.wallet === p.wallet && r.success);
+      return {
+        wallet: p.wallet,
+        amount: p.amount,
+        betAmount: winningBet?.amount || 0,
+        txSignature: payoutTx?.signature,
+      };
+    });
+
+    const historyEntry: RoundHistoryEntry = {
+      round: settledRound,
+      payouts: payoutsWithBetAmount,
+      priceChanges,
+      settledAt: Date.now(),
+    };
+
+    await storage.saveRoundToHistory(historyEntry);
 
     return NextResponse.json({
       success: true,
