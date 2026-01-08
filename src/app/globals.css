@@ -1,16 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --void: #060111;
-  --void-light: #0D0221;
-  --neon-purple: #9D4EDD;
-  --neon-pink: #F72585;
-  --neon-orange: #FF6D00;
-  --neon-cyan: #00F5D4;
+  --navy: #0D1B2A;
+  --navy-dark: #070F18;
+  --navy-light: #1B3A5F;
+  --navy-muted: #152238;
+  --gold: #F0B429;
+  --gold-light: #FFCE54;
+  --gold-dark: #C9941F;
+  --teal: #0ED2B9;
+  --teal-light: #3EEBD4;
+  --violet: #8B5CF6;
+  --slate: #64748B;
+  --slate-light: #94A3B8;
 }
 
 * {
@@ -22,32 +28,14 @@ html {
 }
 
 body {
-  background: linear-gradient(135deg, var(--void) 0%, var(--void-light) 50%, var(--void) 100%);
+  background: linear-gradient(145deg, var(--navy-dark) 0%, var(--navy) 40%, var(--navy-muted) 100%);
   color: white;
   font-family: 'JetBrains Mono', monospace;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* Scanline Overlay Effect */
-.scanlines {
-  pointer-events: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 100;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.15),
-    rgba(0, 0, 0, 0.15) 1px,
-    transparent 1px,
-    transparent 2px
-  );
-}
-
-/* Grid Pattern Overlay */
+/* Animated Grid Pattern Overlay */
 .grid-overlay {
   pointer-events: none;
   position: fixed;
@@ -57,15 +45,18 @@ body {
   height: 100%;
   z-index: 1;
   background-image:
-    linear-gradient(rgba(157, 78, 221, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(157, 78, 221, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(14, 210, 185, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 210, 185, 0.04) 1px, transparent 1px);
   background-size: 50px 50px;
 }
 
-/* Glass Card */
+/* Glass Card - With subtle glow */
 @layer components {
   .glass-card {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl;
+    @apply bg-navy-muted/90 backdrop-blur-md rounded-xl;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
   }
 
   .glass-card-hover {
@@ -73,36 +64,92 @@ body {
   }
 
   .glass-card-hover:hover {
-    @apply bg-white/10 border-neon-purple/50 shadow-neon-purple;
+    @apply bg-navy-light/70;
+    border-color: rgba(14, 210, 185, 0.3);
+    box-shadow: 0 0 25px rgba(14, 210, 185, 0.1),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
   }
 
-  .neon-border {
-    @apply border border-neon-purple/50;
-    box-shadow: 0 0 10px rgba(157, 78, 221, 0.3), inset 0 0 10px rgba(157, 78, 221, 0.1);
+  .gold-border {
+    border: 1px solid rgba(240, 180, 41, 0.4);
+    box-shadow: 0 0 15px rgba(240, 180, 41, 0.2);
   }
 
-  .neon-text {
-    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor;
+  .teal-border {
+    border: 1px solid rgba(14, 210, 185, 0.4);
+    box-shadow: 0 0 15px rgba(14, 210, 185, 0.2);
   }
 
+  /* Animated gradient text */
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-purple via-neon-pink to-neon-orange;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, var(--gold) 0%, var(--teal) 50%, var(--violet) 100%);
+    background-size: 200% 200%;
+    animation: gradient-shift 4s ease infinite;
   }
 
-  .btn-neon {
-    @apply relative px-6 py-3 font-orbitron font-bold uppercase tracking-wider;
-    @apply bg-gradient-to-r from-neon-purple to-neon-pink;
-    @apply rounded-lg transition-all duration-300;
-    @apply hover:shadow-neon-pink hover:scale-105;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  .gradient-text-gold {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-gold-light via-gold to-gold-dark;
   }
 
-  .btn-neon-outline {
-    @apply relative px-6 py-3 font-orbitron font-bold uppercase tracking-wider;
-    @apply bg-transparent border-2 border-neon-cyan text-neon-cyan;
-    @apply rounded-lg transition-all duration-300;
-    @apply hover:bg-neon-cyan/10 hover:shadow-neon-cyan;
+  .btn-primary {
+    @apply relative px-6 py-3 font-heading font-bold tracking-wide rounded-lg transition-all duration-300;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+    background-size: 200% 100%;
+    color: var(--navy-dark);
+    animation: gradient-shift 3s ease infinite;
   }
+
+  .btn-primary:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(240, 180, 41, 0.4), 0 0 40px rgba(240, 180, 41, 0.1);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    @apply relative px-6 py-3 font-heading font-semibold tracking-wide rounded-lg transition-all duration-300;
+    background: linear-gradient(135deg, rgba(14, 210, 185, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+    border: 1px solid rgba(14, 210, 185, 0.5);
+    color: var(--teal);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--teal);
+    box-shadow: 0 0 20px rgba(14, 210, 185, 0.3);
+    background: rgba(14, 210, 185, 0.1);
+  }
+
+  /* Fun accent badges */
+  .badge-gold {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold;
+    background: rgba(240, 180, 41, 0.2);
+    color: var(--gold);
+    border: 1px solid rgba(240, 180, 41, 0.3);
+  }
+
+  .badge-teal {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold;
+    background: rgba(14, 210, 185, 0.2);
+    color: var(--teal);
+    border: 1px solid rgba(14, 210, 185, 0.3);
+  }
+
+  .badge-violet {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold;
+    background: rgba(139, 92, 246, 0.2);
+    color: var(--violet);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 /* Particle Background */
@@ -119,35 +166,48 @@ body {
 
 .particle {
   position: absolute;
-  width: 4px;
-  height: 4px;
-  background: var(--neon-purple);
+  width: 3px;
+  height: 3px;
   border-radius: 50%;
-  opacity: 0.5;
-  animation: float 10s infinite;
+  opacity: 0.4;
+  animation: float 12s infinite;
+}
+
+.particle:nth-child(odd) {
+  background: var(--gold);
+}
+
+.particle:nth-child(even) {
+  background: var(--teal);
 }
 
 /* Glow Effects */
-.glow-purple {
-  box-shadow: 0 0 20px rgba(157, 78, 221, 0.5), 0 0 40px rgba(157, 78, 221, 0.3);
+.glow-gold {
+  box-shadow: 0 0 20px rgba(240, 180, 41, 0.4), 0 0 40px rgba(240, 180, 41, 0.15);
 }
 
-.glow-pink {
-  box-shadow: 0 0 20px rgba(247, 37, 133, 0.5), 0 0 40px rgba(247, 37, 133, 0.3);
+.glow-teal {
+  box-shadow: 0 0 20px rgba(14, 210, 185, 0.4), 0 0 40px rgba(14, 210, 185, 0.15);
 }
 
-.glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 245, 212, 0.5), 0 0 40px rgba(0, 245, 212, 0.3);
-}
-
-.glow-orange {
-  box-shadow: 0 0 20px rgba(255, 109, 0, 0.5), 0 0 40px rgba(255, 109, 0, 0.3);
+.glow-violet {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4), 0 0 40px rgba(139, 92, 246, 0.15);
 }
 
 /* Token Card Selected State */
 .token-card-selected {
-  @apply border-neon-cyan shadow-neon-cyan;
-  animation: pulse-glow 1.5s ease-in-out infinite;
+  border-color: var(--teal) !important;
+  box-shadow: 0 0 25px rgba(14, 210, 185, 0.3), 0 0 50px rgba(14, 210, 185, 0.1);
+  animation: pulse-glow-teal 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow-teal {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(14, 210, 185, 0.3), 0 0 40px rgba(14, 210, 185, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(14, 210, 185, 0.5), 0 0 60px rgba(14, 210, 185, 0.2);
+  }
 }
 
 /* Activity Ticker */
@@ -166,35 +226,52 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--void);
+  background: var(--navy-dark);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--neon-purple);
+  background: linear-gradient(180deg, var(--gold) 0%, var(--teal) 100%);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--neon-pink);
+  background: var(--gold);
 }
 
 /* Selection */
 ::selection {
-  background: var(--neon-purple);
-  color: white;
+  background: var(--teal);
+  color: var(--navy-dark);
 }
 
 /* Countdown Timer */
 .countdown-digit {
-  @apply font-orbitron text-4xl font-bold text-neon-cyan;
-  text-shadow: 0 0 20px var(--neon-cyan);
+  @apply font-heading text-4xl font-bold;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 10px rgba(240, 180, 41, 0.3));
 }
 
 /* Price Change Colors */
 .price-up {
-  @apply text-neon-cyan;
+  color: var(--teal);
+  text-shadow: 0 0 10px rgba(14, 210, 185, 0.3);
 }
 
 .price-down {
-  @apply text-neon-pink;
+  color: #EF4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+/* Neon text effect (subtle) */
+.neon-text {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }

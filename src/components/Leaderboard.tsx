@@ -31,23 +31,23 @@ export function Leaderboard() {
 
   return (
     <div id="leaderboard" className="glass-card p-6">
-      <h2 className="font-orbitron text-xl font-bold gradient-text mb-6 flex items-center gap-3">
+      <h2 className="font-heading text-xl font-bold gradient-text mb-6 flex items-center gap-3">
         <span>🏆</span>
-        Top Degens
+        Top Performers
       </h2>
 
       {isLoading ? (
         <div className="text-center py-8">
-          <div className="animate-spin w-8 h-8 border-2 border-neon-purple border-t-transparent rounded-full mx-auto" />
+          <div className="animate-spin w-8 h-8 border-2 border-gold border-t-transparent rounded-full mx-auto" />
         </div>
       ) : entries.length === 0 ? (
-        <div className="text-center py-8 text-white/40">
+        <div className="text-center py-8 text-slate">
           <p>No winners yet. Be the first!</p>
         </div>
       ) : (
         <div className="space-y-2">
           {/* Header */}
-          <div className="grid grid-cols-4 gap-4 text-xs text-white/40 uppercase tracking-wider pb-2 border-b border-white/10">
+          <div className="grid grid-cols-4 gap-4 text-xs text-slate uppercase tracking-wider pb-2 border-b border-white/10">
             <span>Rank</span>
             <span>Wallet</span>
             <span className="text-right">Won</span>
@@ -84,7 +84,7 @@ function LeaderboardRow({
       case 3:
         return "text-orange-400 font-bold";
       default:
-        return "text-white/60";
+        return "text-slate-light";
     }
   };
 
@@ -104,13 +104,13 @@ function LeaderboardRow({
   return (
     <div className="grid grid-cols-4 gap-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors rounded">
       <span className={`${getRankStyle()} text-lg`}>{getRankEmoji()}</span>
-      <span className="text-neon-cyan font-mono">
+      <span className="text-gold font-mono">
         {shortenAddress(entry.wallet, 6)}
       </span>
-      <span className="text-right font-mono text-neon-pink font-semibold">
+      <span className="text-right font-mono text-teal font-semibold">
         {formatSOL(entry.totalWinnings)} SOL
       </span>
-      <span className="text-right text-white/60">{entry.winCount}</span>
+      <span className="text-right text-slate-light">{entry.winCount}</span>
     </div>
   );
 }
@@ -137,12 +137,12 @@ export function LeaderboardCompact() {
 
   return (
     <div className="glass-card p-4">
-      <h3 className="font-orbitron text-sm text-white/60 mb-3 uppercase tracking-wider flex items-center gap-2">
+      <h3 className="font-heading text-sm text-slate-light mb-3 uppercase tracking-wider flex items-center gap-2">
         🏆 Top 5
       </h3>
       <div className="space-y-2">
         {entries.length === 0 ? (
-          <p className="text-white/40 text-sm">No winners yet</p>
+          <p className="text-slate text-sm">No winners yet</p>
         ) : (
           entries.map((entry, index) => (
             <div
@@ -150,12 +150,12 @@ export function LeaderboardCompact() {
               className="flex items-center justify-between text-sm"
             >
               <div className="flex items-center gap-2">
-                <span className="text-white/40 w-4">{index + 1}.</span>
-                <span className="text-neon-cyan">
+                <span className="text-slate w-4">{index + 1}.</span>
+                <span className="text-gold">
                   {shortenAddress(entry.wallet, 4)}
                 </span>
               </div>
-              <span className="text-neon-pink font-mono">
+              <span className="text-teal font-mono">
                 {formatSOL(entry.totalWinnings)}
               </span>
             </div>

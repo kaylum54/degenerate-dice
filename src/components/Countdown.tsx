@@ -52,7 +52,7 @@ export function Countdown({ endTime, onEnd, compact = false }: CountdownProps) {
 
   if (compact) {
     return (
-      <span className="font-mono text-neon-cyan font-bold">
+      <span className="font-mono text-gold font-bold">
         {mounted ? `${hours}:${minutes}:${seconds}` : "--:--:--"}
       </span>
     );
@@ -61,9 +61,9 @@ export function Countdown({ endTime, onEnd, compact = false }: CountdownProps) {
   return (
     <div className="flex items-center justify-center gap-1">
       <TimeUnit value={mounted ? hours : "--"} label="HRS" />
-      <span className="text-neon-purple text-xl font-bold animate-pulse">:</span>
+      <span className="text-teal text-xl font-bold animate-pulse">:</span>
       <TimeUnit value={mounted ? minutes : "--"} label="MIN" />
-      <span className="text-neon-purple text-xl font-bold animate-pulse">:</span>
+      <span className="text-teal text-xl font-bold animate-pulse">:</span>
       <TimeUnit value={mounted ? seconds : "--"} label="SEC" />
     </div>
   );
@@ -72,10 +72,10 @@ export function Countdown({ endTime, onEnd, compact = false }: CountdownProps) {
 function TimeUnit({ value, label }: { value: string; label: string }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="countdown-digit bg-void-light px-2 py-1 rounded-lg border border-neon-cyan/30 text-lg">
+      <div className="countdown-digit bg-navy-light px-2 py-1 rounded-lg border border-teal/30 text-lg">
         {value}
       </div>
-      <span className="text-[10px] text-white/40 mt-0.5">{label}</span>
+      <span className="text-[10px] text-slate mt-0.5">{label}</span>
     </div>
   );
 }

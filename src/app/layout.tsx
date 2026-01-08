@@ -5,8 +5,8 @@ import { WalletProvider } from "@/components/WalletProvider";
 import { ParticleBackground } from "@/components/ParticleBackground";
 
 export const metadata: Metadata = {
-  title: "Degenerate Dice | Solana Memecoin Predictions",
-  description: "Bet on which memecoin pumps hardest. Winner takes all.",
+  title: "StakePool | Solana Token Predictions",
+  description: "Predict which token performs best. Stake your position. Winners share the pool.",
   icons: {
     icon: "/favicon.ico",
   },
@@ -21,13 +21,10 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-mono antialiased">
         <WalletProvider>
-          {/* Scanline Overlay */}
-          <div className="scanlines" />
-
           {/* Grid Pattern Overlay */}
           <div className="grid-overlay" />
 
-          {/* Particle Background - Client component to avoid hydration mismatch */}
+          {/* Particle Background */}
           <ParticleBackground />
 
           {/* Main Content */}

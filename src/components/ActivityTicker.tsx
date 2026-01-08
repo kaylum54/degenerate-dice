@@ -36,18 +36,18 @@ export function ActivityTicker({ initialBets = [] }: ActivityTickerProps) {
   if (bets.length === 0) {
     return (
       <div className="glass-card p-4">
-        <h3 className="font-orbitron text-xs text-white/60 mb-2 uppercase tracking-wider">
+        <h3 className="font-heading text-xs text-slate-light mb-2 uppercase tracking-wider">
           Live Activity
         </h3>
-        <p className="text-white/40 text-sm">No bets yet. Be the first!</p>
+        <p className="text-slate text-sm">No bets yet. Be the first!</p>
       </div>
     );
   }
 
   return (
     <div className="glass-card p-4 overflow-hidden">
-      <h3 className="font-orbitron text-xs text-white/60 mb-3 uppercase tracking-wider flex items-center gap-2">
-        <span className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse" />
+      <h3 className="font-heading text-xs text-slate-light mb-3 uppercase tracking-wider flex items-center gap-2">
+        <span className="w-2 h-2 bg-gold rounded-full animate-pulse" />
         Live Activity
       </h3>
       <div className="ticker-container">
@@ -64,11 +64,11 @@ export function ActivityTicker({ initialBets = [] }: ActivityTickerProps) {
 function ActivityItem({ bet }: { bet: Bet }) {
   return (
     <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-      <span className="text-neon-cyan">{shortenAddress(bet.wallet)}</span>
-      <span className="text-white/40">bet on</span>
-      <span className="text-neon-pink font-bold">{bet.token}</span>
+      <span className="text-gold">{shortenAddress(bet.wallet)}</span>
+      <span className="text-slate">bet on</span>
+      <span className="text-teal font-bold">{bet.token}</span>
       <span className="text-white/20">•</span>
-      <span className="text-white/40">{formatTimestamp(bet.timestamp)}</span>
+      <span className="text-slate">{formatTimestamp(bet.timestamp)}</span>
     </div>
   );
 }
@@ -77,13 +77,13 @@ function ActivityItem({ bet }: { bet: Bet }) {
 export function ActivityList({ bets }: { bets: Bet[] }) {
   return (
     <div className="glass-card p-4">
-      <h3 className="font-orbitron text-xs text-white/60 mb-3 uppercase tracking-wider flex items-center gap-2">
-        <span className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse" />
-        Recent Bets
+      <h3 className="font-heading text-xs text-slate-light mb-3 uppercase tracking-wider flex items-center gap-2">
+        <span className="w-2 h-2 bg-gold rounded-full animate-pulse" />
+        Recent Activity
       </h3>
       <div className="space-y-2 max-h-48 overflow-y-auto">
         {bets.length === 0 ? (
-          <p className="text-white/40 text-sm">No bets yet</p>
+          <p className="text-slate text-sm">No bets yet</p>
         ) : (
           bets.slice(0, 10).map((bet) => (
             <div
@@ -91,13 +91,13 @@ export function ActivityList({ bets }: { bets: Bet[] }) {
               className="flex items-center justify-between text-sm py-1 border-b border-white/5"
             >
               <div className="flex items-center gap-2">
-                <span className="text-neon-cyan">
+                <span className="text-gold">
                   {shortenAddress(bet.wallet)}
                 </span>
-                <span className="text-white/40">→</span>
-                <span className="text-neon-pink font-bold">{bet.token}</span>
+                <span className="text-slate">→</span>
+                <span className="text-teal font-bold">{bet.token}</span>
               </div>
-              <span className="text-white/40 text-xs">
+              <span className="text-slate text-xs">
                 {formatTimestamp(bet.timestamp)}
               </span>
             </div>

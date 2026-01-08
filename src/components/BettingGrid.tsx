@@ -66,7 +66,7 @@ export function BettingGrid({
     }
 
     if (betAmount < MIN_BET_AMOUNT || betAmount > MAX_BET_AMOUNT) {
-      setError(`Bet must be between ${MIN_BET_AMOUNT} and ${MAX_BET_AMOUNT} SOL`);
+      setError(`Stake must be between ${MIN_BET_AMOUNT} and ${MAX_BET_AMOUNT} SOL`);
       return;
     }
 
@@ -159,14 +159,14 @@ export function BettingGrid({
 
       {/* No tokens state */}
       {tokens.length === 0 && (
-        <div className="text-center py-8 text-white/40">
+        <div className="text-center py-8 text-slate">
           No tokens available for this round
         </div>
       )}
 
-      {/* Bet Amount Input */}
+      {/* Stake Amount Input */}
       <div className="glass-card p-4">
-        <label className="block text-white/60 text-sm mb-2">Bet Amount (SOL)</label>
+        <label className="block text-slate-light text-sm mb-2">Stake Amount (SOL)</label>
         <div className="flex items-center gap-3">
           <input
             type="number"
@@ -176,7 +176,7 @@ export function BettingGrid({
             value={betAmount}
             onChange={(e) => handleBetAmountChange(e.target.value)}
             disabled={isPlacingBet || isBettingDisabled}
-            className="flex-1 px-4 py-3 bg-void-light border border-neon-purple/30 rounded-lg text-white font-mono text-lg focus:border-neon-cyan focus:outline-none disabled:opacity-50"
+            className="flex-1 px-4 py-3 bg-navy-light border border-gold/30 rounded-lg text-white font-mono text-lg focus:border-gold focus:outline-none disabled:opacity-50"
           />
         </div>
 
@@ -189,8 +189,8 @@ export function BettingGrid({
               disabled={isPlacingBet || isBettingDisabled}
               className={`px-3 py-1.5 rounded-lg text-sm font-mono transition-all ${
                 betAmount === amount
-                  ? "bg-neon-cyan text-void font-bold"
-                  : "bg-void-light text-white/60 hover:bg-neon-cyan/20 hover:text-neon-cyan"
+                  ? "bg-gold text-navy-dark font-bold"
+                  : "bg-navy-light text-slate-light hover:bg-gold/20 hover:text-gold"
               } disabled:opacity-50`}
             >
               {amount} SOL
@@ -198,7 +198,7 @@ export function BettingGrid({
           ))}
         </div>
 
-        <p className="text-white/40 text-xs mt-2">
+        <p className="text-slate text-xs mt-2">
           Min: {MIN_BET_AMOUNT} SOL | Max: {MAX_BET_AMOUNT} SOL
         </p>
       </div>
@@ -208,7 +208,7 @@ export function BettingGrid({
         <button
           onClick={placeBet}
           disabled={!publicKey || !selectedToken || isPlacingBet || isBettingDisabled}
-          className="btn-neon w-full max-w-md py-4 text-lg"
+          className="btn-primary w-full max-w-md py-4 text-lg"
         >
           {isPlacingBet ? (
             <span className="flex items-center justify-center gap-2">
@@ -233,31 +233,31 @@ export function BettingGrid({
           ) : isBettingDisabled ? (
             "Round Ended"
           ) : !publicKey ? (
-            "Connect Wallet to Bet"
+            "Connect Wallet to Stake"
           ) : !selectedToken ? (
             "Select a Token"
           ) : (
-            `Place Bet (${formatSOL(betAmount)} SOL)`
+            `Place Stake (${formatSOL(betAmount)} SOL)`
           )}
         </button>
 
         {/* Status Messages */}
         {error && (
-          <div className="w-full max-w-md p-3 rounded-lg bg-neon-pink/20 border border-neon-pink text-neon-pink text-sm text-center">
+          <div className="w-full max-w-md p-3 rounded-lg bg-teal/20 border border-teal text-teal text-sm text-center">
             {error}
           </div>
         )}
         {success && (
-          <div className="w-full max-w-md p-3 rounded-lg bg-neon-cyan/20 border border-neon-cyan text-neon-cyan text-sm text-center">
+          <div className="w-full max-w-md p-3 rounded-lg bg-gold/20 border border-gold text-gold text-sm text-center">
             {success}
           </div>
         )}
 
         {/* Bet Info */}
-        <p className="text-white/40 text-xs text-center max-w-md">
+        <p className="text-slate text-xs text-center max-w-md">
           {roundStatus === "betting"
-            ? "You're betting on the NEXT round. Prices will be snapshotted when round goes live."
-            : "Pick the memecoin you think will pump hardest. Winners split 90% of the total pool."
+            ? "You're staking on the NEXT round. Prices will be snapshotted when round goes live."
+            : "Select the token you predict will outperform. Winners split 90% of the total pool."
           }
         </p>
       </div>
