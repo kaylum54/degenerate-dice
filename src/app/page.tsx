@@ -1,14 +1,16 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/Header";
 import { BettingGrid } from "@/components/BettingGrid";
 import { Countdown } from "@/components/Countdown";
 import { ActivityTicker } from "@/components/ActivityTicker";
 import { Leaderboard } from "@/components/Leaderboard";
 import { PoolInfo } from "@/components/PoolInfo";
+import { WinnerModal } from "@/components/WinnerModal";
 import { usePrices } from "@/hooks/usePrices";
 import { useRound } from "@/hooks/useRound";
-import { ROUND_DURATION_MS, BETTING_WINDOW_MS } from "@/lib/storage";
+import { ROUND_DURATION_MS, BETTING_WINDOW_MS, RoundHistoryEntry } from "@/lib/storage";
 
 export default function Home() {
   const { prices, isLoading: pricesLoading } = usePrices();
@@ -18,9 +20,29 @@ export default function Home() {
     liveBetCounts,
     nextBetCounts,
     activity,
+    lastSettledRound,
     betting,
     refresh: refreshRound,
   } = useRound();
+
+  // Track the last shown winner modal to avoid showing it multiple times
+  const lastShownRoundId = useRef<string | null>(null);
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
+  const [modalRound, setModalRound] = useState<RoundHistoryEntry | null>(null);
+
+  // Show winner modal when a new round settles
+  useEffect(() => {
+    if (lastSettledRound && lastSettledRound.round.id !== lastShownRoundId.current) {
+      // New settled round detected - show the modal
+      setModalRound(lastSettledRound);
+      setShowWinnerModal(true);
+      lastShownRoundId.current = lastSettledRound.round.id;
+    }
+  }, [lastSettledRound]);
+
+  const handleCloseWinnerModal = () => {
+    setShowWinnerModal(false);
+  };
 
   const handleBetPlaced = () => {
     refreshRound();
@@ -371,6 +393,14 @@ export default function Home() {
           </div>
         </footer>
       </main>
+
+      {/* Winner Announcement Modal */}
+      {showWinnerModal && modalRound && (
+        <WinnerModal
+          settledRound={modalRound}
+          onClose={handleCloseWinnerModal}
+        />
+      )}
     </div>
   );
 }

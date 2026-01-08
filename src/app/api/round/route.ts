@@ -9,6 +9,10 @@ export async function GET() {
     const nextRound = await storage.getNextRound();
     const activity = await storage.getActivityFeed(10);
 
+    // Get the most recent settled round for winner announcements
+    const roundHistory = await storage.getRoundHistory(1);
+    const lastSettledRound = roundHistory.length > 0 ? roundHistory[0] : null;
+
     // Get bet counts for both rounds
     const liveBetCounts = liveRound ? await storage.getBetCountsByToken(liveRound.id) : {};
     const nextBetCounts = nextRound ? await storage.getBetCountsByToken(nextRound.id) : {};
@@ -44,6 +48,7 @@ export async function GET() {
       liveBetCounts,
       nextBetCounts,
       activity,
+      lastSettledRound,
       betting: {
         status: bettingStatus,
         target: bettingTarget,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Round, Bet } from "@/lib/storage";
+import { Round, Bet, RoundHistoryEntry } from "@/lib/storage";
 
 interface BettingInfo {
   status: "open" | "locked" | "none";
@@ -17,6 +17,7 @@ interface RoundData {
   liveBetCounts: Record<string, number>;
   nextBetCounts: Record<string, number>;
   activity: Bet[];
+  lastSettledRound: RoundHistoryEntry | null;
   betting: BettingInfo;
   config: {
     roundDuration: number;
@@ -31,6 +32,7 @@ export function useRound(refreshInterval = 3000) {
   const [liveBetCounts, setLiveBetCounts] = useState<Record<string, number>>({});
   const [nextBetCounts, setNextBetCounts] = useState<Record<string, number>>({});
   const [activity, setActivity] = useState<Bet[]>([]);
+  const [lastSettledRound, setLastSettledRound] = useState<RoundHistoryEntry | null>(null);
   const [betting, setBetting] = useState<BettingInfo>({
     status: "none",
     target: null,
@@ -74,6 +76,7 @@ export function useRound(refreshInterval = 3000) {
       setLiveBetCounts(data.liveBetCounts || {});
       setNextBetCounts(data.nextBetCounts || {});
       setActivity(data.activity || []);
+      setLastSettledRound(data.lastSettledRound || null);
       setBetting(data.betting || {
         status: "none",
         target: null,
@@ -101,6 +104,7 @@ export function useRound(refreshInterval = 3000) {
     liveBetCounts,
     nextBetCounts,
     activity,
+    lastSettledRound,
     betting,
     isLoading,
     error,
