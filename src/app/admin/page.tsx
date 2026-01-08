@@ -5,6 +5,13 @@ import { Header } from "@/components/Header";
 import { Round, Bet, ROUND_DURATION_MS, RoundHistoryEntry } from "@/lib/storage";
 import { formatSOL, shortenAddress, formatTimestamp } from "@/lib/utils";
 
+interface PayoutStatus {
+  payoutConfigured: boolean;
+  escrowWallet: string | null;
+  escrowBalance: number;
+  rpcUrl: string;
+}
+
 export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,6 +25,7 @@ export default function AdminPage() {
   } | null>(null);
   const [roundHistory, setRoundHistory] = useState<RoundHistoryEntry[]>([]);
   const [selectedHistoryRound, setSelectedHistoryRound] = useState<RoundHistoryEntry | null>(null);
+  const [payoutStatus, setPayoutStatus] = useState<PayoutStatus | null>(null);
 
   // Fetch current round
   const fetchRound = async () => {
@@ -43,10 +51,28 @@ export default function AdminPage() {
     }
   };
 
+  // Fetch payout status
+  const fetchPayoutStatus = async () => {
+    try {
+      const response = await fetch("/api/admin/payout-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setPayoutStatus(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch payout status:", error);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchRound();
       fetchHistory();
+      fetchPayoutStatus();
       const interval = setInterval(fetchRound, 3000);
       return () => clearInterval(interval);
     }
@@ -161,6 +187,48 @@ export default function AdminPage() {
         <p className="text-white/40 text-sm mb-8">
           {ROUND_DURATION_MS / 60000}min rounds
         </p>
+
+        {/* Payout System Status */}
+        {payoutStatus && (
+          <div className={`p-4 rounded-lg mb-6 ${
+            payoutStatus.payoutConfigured
+              ? "bg-green-500/20 border border-green-500"
+              : "bg-neon-orange/20 border border-neon-orange"
+          }`}>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <span className={`text-2xl`}>
+                  {payoutStatus.payoutConfigured ? "✅" : "⚠️"}
+                </span>
+                <div>
+                  <div className={`font-bold ${payoutStatus.payoutConfigured ? "text-green-400" : "text-neon-orange"}`}>
+                    {payoutStatus.payoutConfigured ? "Auto-Payouts Enabled" : "Auto-Payouts Disabled"}
+                  </div>
+                  {payoutStatus.payoutConfigured ? (
+                    <div className="text-white/60 text-sm">
+                      Escrow: {payoutStatus.escrowWallet?.slice(0, 8)}...{payoutStatus.escrowWallet?.slice(-6)}
+                    </div>
+                  ) : (
+                    <div className="text-white/60 text-sm">
+                      Set ESCROW_WALLET_PRIVATE_KEY in Vercel env vars
+                    </div>
+                  )}
+                </div>
+              </div>
+              {payoutStatus.payoutConfigured && (
+                <div className="text-right">
+                  <div className="text-white/60 text-sm">Escrow Balance</div>
+                  <div className={`font-mono font-bold ${payoutStatus.escrowBalance > 0.1 ? "text-green-400" : "text-neon-orange"}`}>
+                    {payoutStatus.escrowBalance.toFixed(4)} SOL
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="mt-2 text-white/40 text-xs">
+              RPC: {payoutStatus.rpcUrl}
+            </div>
+          </div>
+        )}
 
         {/* Status Message */}
         {message && (
