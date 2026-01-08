@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --void: #060111;
+  --void-light: #0D0221;
+  --neon-purple: #9D4EDD;
+  --neon-pink: #F72585;
+  --neon-orange: #FF6D00;
+  --neon-cyan: #00F5D4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: linear-gradient(135deg, var(--void) 0%, var(--void-light) 50%, var(--void) 100%);
+  color: white;
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scanline Overlay Effect */
+.scanlines {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+
+/* Grid Pattern Overlay */
+.grid-overlay {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background-image:
+    linear-gradient(rgba(157, 78, 221, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(157, 78, 221, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Glass Card */
+@layer components {
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300;
+  }
+
+  .glass-card-hover:hover {
+    @apply bg-white/10 border-neon-purple/50 shadow-neon-purple;
+  }
+
+  .neon-border {
+    @apply border border-neon-purple/50;
+    box-shadow: 0 0 10px rgba(157, 78, 221, 0.3), inset 0 0 10px rgba(157, 78, 221, 0.1);
+  }
+
+  .neon-text {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-purple via-neon-pink to-neon-orange;
+  }
+
+  .btn-neon {
+    @apply relative px-6 py-3 font-orbitron font-bold uppercase tracking-wider;
+    @apply bg-gradient-to-r from-neon-purple to-neon-pink;
+    @apply rounded-lg transition-all duration-300;
+    @apply hover:shadow-neon-pink hover:scale-105;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  }
+
+  .btn-neon-outline {
+    @apply relative px-6 py-3 font-orbitron font-bold uppercase tracking-wider;
+    @apply bg-transparent border-2 border-neon-cyan text-neon-cyan;
+    @apply rounded-lg transition-all duration-300;
+    @apply hover:bg-neon-cyan/10 hover:shadow-neon-cyan;
+  }
+}
+
+/* Particle Background */
+.particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--neon-purple);
+  border-radius: 50%;
+  opacity: 0.5;
+  animation: float 10s infinite;
+}
+
+/* Glow Effects */
+.glow-purple {
+  box-shadow: 0 0 20px rgba(157, 78, 221, 0.5), 0 0 40px rgba(157, 78, 221, 0.3);
+}
+
+.glow-pink {
+  box-shadow: 0 0 20px rgba(247, 37, 133, 0.5), 0 0 40px rgba(247, 37, 133, 0.3);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 245, 212, 0.5), 0 0 40px rgba(0, 245, 212, 0.3);
+}
+
+.glow-orange {
+  box-shadow: 0 0 20px rgba(255, 109, 0, 0.5), 0 0 40px rgba(255, 109, 0, 0.3);
+}
+
+/* Token Card Selected State */
+.token-card-selected {
+  @apply border-neon-cyan shadow-neon-cyan;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+/* Activity Ticker */
+.ticker-container {
+  @apply overflow-hidden whitespace-nowrap;
+}
+
+.ticker-content {
+  @apply inline-block animate-ticker;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--void);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neon-purple);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-pink);
+}
+
+/* Selection */
+::selection {
+  background: var(--neon-purple);
+  color: white;
+}
+
+/* Countdown Timer */
+.countdown-digit {
+  @apply font-orbitron text-4xl font-bold text-neon-cyan;
+  text-shadow: 0 0 20px var(--neon-cyan);
+}
+
+/* Price Change Colors */
+.price-up {
+  @apply text-neon-cyan;
+}
+
+.price-down {
+  @apply text-neon-pink;
+}
